@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 import glob
 import matplotlib.pyplot as plt  # Matplotlib für die Bildanzeige
-
+from typing import List
 
 def get_file_hash(filepath: str) -> str:
     """Berechnet den Hash einer Datei"""
