@@ -9,6 +9,109 @@ import glob
 import matplotlib.pyplot as plt  # Matplotlib für die Bildanzeige
 
 
+def get_file_hash(filepath: str) -> str:
+    """Berechnet den Hash einer Datei"""
+    hash_md5 = hashlib.md5()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
+def is_duplicate_image(new_image_data: bytes, save_path: str) -> bool:
+    """Prüft, ob ein identisches Bild bereits existiert"""
+    new_hash = hashlib.md5(new_image_data).hexdigest()
+
+    # Prüfe alle existierenden Bilder im Ordner
+    for filename in os.listdir(save_path):
+        if filename.endswith(('.jpg', '.jpeg', '.png')):
+            existing_file_path = os.path.join(save_path, filename)
+            if get_file_hash(existing_file_path) == new_hash:
+                return True, filename
+    return False, None
+
+
+def download_multiple_images(image_urls: List[str], save_path: str, start_number: int = 20):
+    # Erstelle den Ordner falls er nicht existiert
+    os.makedirs(save_path, exist_ok=True)
+
+    current_number = start_number
+    successful_downloads = 0
+    failed_downloads = 0
+    renamed_files = 0
+
+    for url in image_urls:
+        try:
+            # Überprüfe die Dateiendung
+            parsed_url = urlparse(url)
+            file_extension = os.path.splitext(parsed_url.path)[1].lower()
+
+            # Liste der erlaubten Dateiformate
+            allowed_extensions = ['.jpg', '.jpeg', '.png']
+
+            if file_extension not in allowed_extensions:
+                print(f"Überspringe URL {url}: Nur {', '.join(allowed_extensions)} Dateien sind erlaubt.")
+                failed_downloads += 1
+                continue
+
+            # Lade das Bild herunter
+            response = requests.get(url, timeout=10)
+
+            # Überprüfe den Content-Type im Header
+            content_type = response.headers.get('content-type', '')
+            if not any(img_type in content_type.lower() for img_type in ['jpeg', 'jpg', 'png']):
+                print(f"Überspringe URL {url}: Kein gültiges Bildformat")
+                failed_downloads += 1
+                continue
+
+            if response.status_code == 200:
+                # Finde den nächsten verfügbaren Dateinamen
+                original_number = current_number
+                while True:
+                    new_filename = f"Safety{current_number}{file_extension}"
+                    filepath = os.path.join(save_path, new_filename)
+                    if not os.path.exists(filepath):
+                        break
+                    current_number += 1
+
+                # Prüfe ob die Nummer erhöht wurde
+                if current_number > original_number:
+                    renamed_files += 1
+                    print(f"ℹ Dateiname Safety{original_number} existiert bereits, nutze Safety{current_number}")
+
+                # Speichere das Bild
+                with open(filepath, 'wb') as f:
+                    f.write(response.content)
+                print(f"✓ Erfolgreich heruntergeladen als: {new_filename}")
+                successful_downloads += 1
+                current_number += 1
+            else:
+                print(f"✗ Fehler bei URL {url}: HTTP Status Code {response.status_code}")
+                failed_downloads += 1
+
+        except requests.exceptions.RequestException as e:
+            print(f"✗ Fehler bei URL {url}: {str(e)}")
+            failed_downloads += 1
+            continue
+        except Exception as e:
+            print(f"✗ Unerwarteter Fehler bei URL {url}: {str(e)}")
+            failed_downloads += 1
+            continue
+
+    # Zusammenfassung ausgeben
+    print("\nZusammenfassung:")
+    print(f"Erfolgreich heruntergeladen: {successful_downloads} Bilder")
+    print(f"Automatisch umbenannt: {renamed_files} Bilder")
+    print(f"Fehlgeschlagen: {failed_downloads} Bilder")
+    print(f"Nächste verfügbare Nummer: {current_number}")
+
+    # Zusammenfassung ausgeben
+    print("\nZusammenfassung:")
+    print(f"Erfolgreich heruntergeladen: {successful_downloads} Bilder")
+    print(f"Fehlgeschlagen: {failed_downloads} Bilder")
+    print(f"Nächste verfügbare Nummer: {current_number}")
+
+
 def show_images(FOLDER_PATH):
     # Sammle alle Bildpfade
     image_paths = []
