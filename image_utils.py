@@ -148,6 +148,113 @@ def show_images(FOLDER_PATH):
     plt.show()
 
 
+def interactive_delete_images(delete_folder_path: str = f"{SHOW_IMAGE_FOLDER_PATH}"):
+    """
+    Interaktive Funktion zum Löschen von Bildern mit Eingabeaufforderung.
+    """
+    if not os.path.exists(delete_folder_path):
+        print(f"⚠ Ordner {delete_folder_path} existiert nicht!")
+        return
+
+    # Zeige vorhandene Bilder
+    images = [f for f in os.listdir(delete_folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    if not images:
+        print("Keine Bilder im Ordner gefunden!")
+        return
+
+    print("\nVorhandene Bilder:")
+    for img in sorted(images):
+        print(f"- {img}")
+
+    print("\nGeben Sie die zu löschenden Dateinamen ein (getrennt durch Kommas)")
+    print("Beispiel: Safety50.jpg, Safety51.png")
+    print("Oder 'exit' zum Beenden")
+
+    while True:
+        user_input = input("\nZu löschende Dateien: ").strip()
+
+        if user_input.lower() == 'exit':
+            print("Löschvorgang beendet.")
+            break
+
+        # Bereinige die Eingabe
+        filenames = [f.strip() for f in user_input.split(',') if f.strip()]
+
+        if not filenames:
+            print("Keine gültigen Dateinamen eingegeben.")
+            continue
+
+        # Bestätigung anfordern
+        print("\nFolgende Dateien werden gelöscht:")
+        for f in filenames:
+            print(f"- {f}")
+        confirm = input("\nSind Sie sicher? (ja/nein): ").strip().lower()
+
+        if confirm == 'ja':
+            delete_images(filenames, delete_folder_path)
+            break
+        else:
+            print("Löschvorgang abgebrochen.")
+
+
+def delete_images(filenames: List[str], delete_folder_path: str = f"{SHOW_IMAGE_FOLDER_PATH}"):
+    """
+    Löscht die angegebenen Bilder aus dem Ordner.
+
+    Args:
+        filenames: Liste von Dateinamen (z.B. ["Safety50.jpg", "Safety51.png"])
+        save_path: Pfad zum Ordner mit den Bildern
+    """
+    if not os.path.exists(delete_folder_path):
+        print(f"⚠ Ordner {delete_folder_path} existiert nicht!")
+        return
+
+    successful_deletions = 0
+    failed_deletions = 0
+    not_found = 0
+
+    print("Starte Löschvorgang...")
+
+    for filename in filenames:
+        filepath = os.path.join(delete_folder_path, filename)
+
+        # Prüfe ob die Datei existiert
+        if not os.path.exists(filepath):
+            print(f"✗ Datei nicht gefunden: {filename}")
+            not_found += 1
+            continue
+
+        # Prüfe ob es sich um ein Bild handelt
+        if not filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+            print(f"✗ Keine Bilddatei: {filename}")
+            failed_deletions += 1
+            continue
+
+        try:
+            # Versuche die Datei zu löschen
+            os.remove(filepath)
+            print(f"✓ Erfolgreich gelöscht: {filename}")
+            successful_deletions += 1
+        except Exception as e:
+            print(f"✗ Fehler beim Löschen von {filename}: {str(e)}")
+            failed_deletions += 1
+
+    # Zusammenfassung ausgeben
+    print("\nZusammenfassung:")
+    print(f"Erfolgreich gelöscht: {successful_deletions} Bilder")
+    print(f"Nicht gefunden: {not_found} Dateien")
+    print(f"Fehlgeschlagen: {failed_deletions} Dateien")
+
+    # Liste alle noch vorhandenen Bilder auf
+    # remaining_images = [f for f in os.listdir(save_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    # if remaining_images:
+    #    print("\nNoch vorhandene Bilder:")
+    #    for img in sorted(remaining_images):
+    #        print(f"- {img}")
+
+
+
+
 def check_duplicates(FOLDER_PATH):
     """
     Erkennt Duplikate basierend auf Bildinhalten durch verschiedene Hash-Methoden.
