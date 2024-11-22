@@ -148,7 +148,7 @@ def show_images(FOLDER_PATH):
     plt.show()
 
 
-def interactive_delete_images(delete_folder_path: str = f"{SHOW_IMAGE_FOLDER_PATH}"):
+def interactive_delete_images(delete_folder_path):
     """
     Interaktive Funktion zum Löschen von Bildern mit Eingabeaufforderung.
     """
@@ -197,7 +197,7 @@ def interactive_delete_images(delete_folder_path: str = f"{SHOW_IMAGE_FOLDER_PAT
             print("Löschvorgang abgebrochen.")
 
 
-def delete_images(filenames: List[str], delete_folder_path: str = f"{SHOW_IMAGE_FOLDER_PATH}"):
+def delete_images(filenames: List[str], delete_folder_path):
     """
     Löscht die angegebenen Bilder aus dem Ordner.
 
