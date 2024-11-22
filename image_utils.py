@@ -8,6 +8,9 @@ import shutil
 import glob
 import matplotlib.pyplot as plt  # Matplotlib für die Bildanzeige
 from typing import List
+import requests
+from urllib.parse import urlparse
+
 
 def get_file_hash(filepath: str) -> str:
     """Berechnet den Hash einer Datei"""
